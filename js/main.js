@@ -45,7 +45,7 @@ $(function() {
 			var tr = $('#table').append('<tr id="'+i+'"><td>'+positions[i]+'</td><td>'+count[i]+'</td><td>'+frecuencia[i]+'</td><td>'+porcentaje[i]+'</td><td>'+porcentajeT[i]+'</td></tr>');
 		};
 		for (var i = 0; i < values.length; i++) {
-			$('p#one').append('['+values[i]+']; ');
+			$('#one center').append('['+values[i]+']; ');
 		};
 		$('#rango').html('N: '+values.length);
 
@@ -62,6 +62,7 @@ $(function() {
 				moda = positions[i];
 		};
 		$('#moda').html('Moda: '+moda);
+		$('#total').html('total: '+sumaT);
 	});
 
 });
