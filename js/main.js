@@ -103,11 +103,13 @@ $(function() {
 				}
 			});
 		}else {
-			var nClases = Math.round(Math.floor(1 + 3.32 * Math.log10(40))),
-				amplitud = positions.max() - positions.min(),
-				intervalo = amplitud/nClases;
-			console.log(amplitud+' '+nClases);
-			console.log(intervalo);
+			var ni = Math.round(Math.floor(1 + 3.32 * Math.log10(values.length))),
+				R = positions.max() - positions.min(),
+				i = Math.ceil(R/ni);
+
+			R = ni*i;
+			console.log(R);
+			console.log(values.length);
 		}
 	});
 	function adder(count, arr) {
