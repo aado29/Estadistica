@@ -8,12 +8,21 @@ $(function() {
 	var parametros = $('#parametros');
 	$('button').click(function() {
 		$('p').html('');
-		var values = parametros.val().trim(),
+		var regEx = /(\d+[\.|\,]?\d+)+/g;
+			value = parametros.val(),
+			values = [],
+			match = true,
 			positions = [];
-		values = values.split(" ");
+
+		while (match) {
+			match = regEx.exec(value);
+			if(match) values.push(match[0]);
+		}
 		values.sort(function (a,b) {
 			return a - b;
 		});
+
+		$('#one center').html(printOrder(values));
 
 		if (values.length < 40) {
 
@@ -64,10 +73,6 @@ $(function() {
 				$('#table').append('<tr id="'+i+'"><td>'+positions[i]+'</td><td>'+f[i]+'</td><td>'+fa[i]+'</td><td>'+fr[i]+'</td><td>'+fra[i]+'</td><td>'+multi1[i]+'</td><td>'+multi2[i]+'</td></tr>');
 			}
 
-			for (var i = 0; i < values.length; i++) {
-				$('#one center').append('['+values[i]+']; ');
-			}
-
 			$('#rango').html(values.length);
 
 			$('#media').html(sumaT/values.length); //
@@ -110,13 +115,6 @@ $(function() {
 				R = values.max() - values.min(),
 				I = Math.ceil(R/ni);
 
-			console.log('R: '+R);
-			console.log('ni: '+ni);
-			console.log('i: '+I);
-			console.log('ciax: '+values.max());
-			console.log('ciin: '+values.min());
-			console.log('N: '+values.length);
-
 			//creating classes group
 			var classes = [];
 			var f = [];
@@ -138,11 +136,22 @@ $(function() {
 				fra.push(getfr(fa[i], values.length));
 			}
 
+			console.log('R: '+R);
+			console.log('ni: '+ni);
+			console.log('i: '+I);
+			console.log('ciax: '+values.max());
+			console.log('ciin: '+values.min());
+			console.log('N: '+values.length);
+			console.log('f-1: '+getLimit(f.max(), f, 'min'));
+			console.log('fMax: '+f.max());
+			console.log('f+1: '+getLimit(f.max(), f, 'max'));
+
 			$('#table').html('<tr class="info"><th>Clases</th><th>f<sub>i</sub></th><th>f<sub>i</sub>a</th><th>fr</th><th>fra</th><th>ci</th></tr>');
 			for (var i = 0; i < classes.length; i++) {
 				var strMinMax = (classes[i]-(I-1))+'-'+classes[i];
 				var tr = $('#table').append('<tr id="'+i+'"><td>'+strMinMax+'</td><td>'+f[i]+'</td><td>'+fa[i]+'</td><td>'+fr[i]+'</td><td>'+fra[i]+'</td><td>'+ci[i]+'</td></tr>');
 			}
+			$('#moda').html(getmodagroup(f.max(), I-1, f, classes));
 		}
 	});
 	function adder(count, arr) {
@@ -154,7 +163,7 @@ $(function() {
 		var a = 0;
 		for (var i = 0; i < data.length; i++) {
 			for (var j = 0; j <= count; j++) {
-				if (data[i] == min+j) {
+				if (Math.floor(data[i]) == min+j) {
 					a += 1;
 				}
 			}
@@ -166,5 +175,37 @@ $(function() {
 	}
 	function getfr(i, total) {
 		return i/total;
+	}
+	function getmodagroup(f, a, data, classes) {
+		var min = getLimit(f, data, 'min'),
+			max = getLimit(f, data, 'max'),
+			l = getLimitClass(getLimit(f, data, 'index'), a, classes, 'min');
+
+		return l + (max/(min+max)) * a;
+	}
+	function getLimit(f, data, type) {
+		var index;
+		for (var i = 0; i < data.length; i++) {
+			if(data[i] == f) {
+				index = i;
+			}
+		}
+
+		if (type == 'min') return data[index-1];
+		if (type == 'max') return data[index+1] ? data[index+1] : 0;
+		if (type == 'index') return index;
+	}
+	function getLimitClass(i, a, data, type) {
+		if (type == 'min')
+			return data[i]-a;
+		if (type == 'max')
+			return data[i];
+	}
+	function printOrder(data) {
+		var str = '';
+		for (var i = 0; i < data.length; i++) {
+			str += '[' + data[i] + '];';
+		}
+		return str;
 	}
 });
