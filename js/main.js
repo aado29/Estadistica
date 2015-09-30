@@ -5,26 +5,17 @@ $(function() {
 	Array.prototype.min = function() {
 		return Math.min.apply(null, this);
 	};
-	var parametros = $('#parametros');
+	var parametros = $('#parametros').val();
 	$('button').click(function() {
 		$('p').html('');
-		var regEx = /(\d+[\.|\,]?\d+)+/g;
-			value = parametros.val(),
-			values = [],
-			match = true,
-			positions = [];
-
-		while (match) {
-			match = regEx.exec(value);
-			if(match) values.push(match[0]);
-		}
-		values.sort(function (a,b) {
-			return a - b;
-		});
+		var positions = [],
+			is_group = $('#check').is(':checked'),
+			values = getArguments(parametros);
 
 		$('#one center').html(printOrder(values));
+		$('#rango').html(values.length);
 
-		if (values.length < 40) {
+		if (!is_group) {
 
 			var f = [],
 				fa = [],
@@ -67,15 +58,10 @@ $(function() {
 				sumMulti2 += multi2[i];
 			}
 
-			$('#table').html('<tr class="info"><th>x<sub>i</sub></th><th>f<sub>i</sub></th><th>f<sub>i</sub>a</th><th>fr</th><th>fra</th><th>x<sub>i</sub>·f<sub>i</sub></th><th>x²<sub>i</sub>·f<sub>i</sub></th></tr>');
+			tableGroup(values);
+			console.log(tableGroup(values));
 
-			for (var i = 0; i < positions.length; i++) {
-				$('#table').append('<tr id="'+i+'"><td>'+positions[i]+'</td><td>'+f[i]+'</td><td>'+fa[i]+'</td><td>'+fr[i]+'</td><td>'+fra[i]+'</td><td>'+multi1[i]+'</td><td>'+multi2[i]+'</td></tr>');
-			}
-
-			$('#rango').html(values.length);
-
-			$('#media').html(sumaT/values.length); //
+			$('#media').html(sumaT/values.length);
 
 			if (values.length % 2 == 0) {
 				$('#mediana').html(( parseInt(values[(values.length/2)-1]) + parseInt(values[(values.length/2)]) )/2);
@@ -139,12 +125,14 @@ $(function() {
 			console.log('R: '+R);
 			console.log('ni: '+ni);
 			console.log('i: '+I);
-			console.log('ciax: '+values.max());
-			console.log('ciin: '+values.min());
+			console.log('cimax: '+values.max());
+			console.log('cimin: '+values.min());
 			console.log('N: '+values.length);
-			console.log('f-1: '+getLimit(f.max(), f, 'min'));
+			console.log('f-1: '+getLimitF(f.max(), f, 'min'));
+			console.log('fa-1: '+getLimitFa(f.max(), f, fa, 'min'));
 			console.log('fMax: '+f.max());
-			console.log('f+1: '+getLimit(f.max(), f, 'max'));
+			console.log('fa+1: '+getLimitFa(f.max(), f, fa, 'max'));
+			console.log('f+1: '+getLimitF(f.max(), f, 'max'));
 
 			$('#table').html('<tr class="info"><th>Clases</th><th>f<sub>i</sub></th><th>f<sub>i</sub>a</th><th>fr</th><th>fra</th><th>ci</th></tr>');
 			for (var i = 0; i < classes.length; i++) {
@@ -152,11 +140,32 @@ $(function() {
 				var tr = $('#table').append('<tr id="'+i+'"><td>'+strMinMax+'</td><td>'+f[i]+'</td><td>'+fa[i]+'</td><td>'+fr[i]+'</td><td>'+fra[i]+'</td><td>'+ci[i]+'</td></tr>');
 			}
 			$('#moda').html(getmodagroup(f.max(), I-1, f, classes));
+			$('#media').html(getmediagroup(f.max(), I-1, f, classes));
+			$('#mediana').html(getmediana(f));
+
+			var x = ['x'],
+				x1 = ['x1'];
+
+			adder(classes, x);
+			adder(fra, x1);
+
+			var chart = c3.generate({
+				data: {
+					xs: {
+						'x1': 'x',
+					},
+					columns: [
+						x1,
+						x
+					],
+					type: 'bar'
+				}
+			});
 		}
 	});
 	function adder(count, arr) {
 		for (var i = 0; i < count.length; i++) {
-			arr.push(count[i])
+			arr.push(count[i]);
 		}
 	}
 	function getAccumulated(min, count, data) {
@@ -177,13 +186,23 @@ $(function() {
 		return i/total;
 	}
 	function getmodagroup(f, a, data, classes) {
-		var min = getLimit(f, data, 'min'),
-			max = getLimit(f, data, 'max'),
-			l = getLimitClass(getLimit(f, data, 'index'), a, classes, 'min');
+		var min = getLimitF(f, data, 'min'),
+			max = getLimitF(f, data, 'max'),
+			l = getLimitClass(getLimitF(f, data, 'index'), a, classes, 'min');
 
 		return l + (max/(min+max)) * a;
 	}
-	function getLimit(f, data, type) {
+	function getmediagroup(f, a, data, classes) {
+		var min = getLimitClass(getLimitF(f, data, 'index'), a, classes, 'min'),
+			max = getLimitClass(getLimitF(f, data, 'index'), a, classes, 'max');
+
+		return (min+max)/2;
+	}
+	function getmediana(dataf) {
+		var li = getLimitF(dataf.max(), dataf, 'min');
+		return li;
+	}
+	function getLimitF(f, data, type) {
 		var index;
 		for (var i = 0; i < data.length; i++) {
 			if(data[i] == f) {
@@ -195,6 +214,18 @@ $(function() {
 		if (type == 'max') return data[index+1] ? data[index+1] : 0;
 		if (type == 'index') return index;
 	}
+	function getLimitFa(f, dataF, dataFa, type) {
+		var index;
+		for (var i = 0; i < dataF.length; i++) {
+			if(dataF[i] == f) {
+				index = i;
+			}
+		}
+
+		if (type == 'min') return dataFa[index-1];
+		if (type == 'max') return dataFa[index+1] ? dataFa[index+1] : 0;
+		if (type == 'index') return index;
+	}
 	function getLimitClass(i, a, data, type) {
 		if (type == 'min')
 			return data[i]-a;
@@ -204,8 +235,9 @@ $(function() {
 	function printOrder(data) {
 		var str = '';
 		for (var i = 0; i < data.length; i++) {
-			str += '[' + data[i] + '];';
+			str += '[' + data[i] + '<sub>' + (i+1) + '</sub>];';
 		}
 		return str;
 	}
+
 });
