@@ -6,34 +6,21 @@ Array.prototype.min = function() {
 	return Math.min.apply(null, this);
 }
 
-function getArguments(str) {
-	var regEx = /(\d+[\.|\,]?\d+)|(\d)+/g,
-		values = [],
-		match  = true;
-	while (match) {
-		match = regEx.exec(str);
-		if(match) values.push(match[0]);
-	}
-	values.sort(function (a,b) {
-		return a - b;
-	});
-    return values;
-}
-
-function getCount(arr) {
-	var c = 0;
-	for (var i = 0; i < arr.length; i++) {
-		c += parseFloat(arr[i]);
-	}
-	return c;
-}
-
 function adder(count, arr) {
 	for (var i = 0; i < count.length; i++) {
 		arr.push(count[i]);
 	}
 	return arr;
 }
+
+function printOrder(data) {
+	var str = '';
+	for (var i = 0; i < data.length; i++) {
+		str += '[' + data[i] + '<sub>' + (i+1) + '</sub>];';
+	}
+	return str;
+}
+
 /**  -------------------------------------  */
 
 function Grouped(data) {
@@ -64,7 +51,7 @@ Grouped.prototype.getCount = function() {
 }
 
 Grouped.prototype.getParameters = function() {
-	var values = this.getArguments(this.data),
+	var values = this.getArguments(),
 		x = [],
 		f = [],
 		fa = [],
@@ -143,4 +130,98 @@ Grouped.prototype.drawTable = function(id) {
 	for (var i = 0; i < data[0].length; i++) {
 		table.innerHTML	+=	'<tr id="'+i+'"><td>'+data[0][i]+'</td><td>'+data[1][i]+'</td><td>'+data[2][i]+'</td><td>'+data[3][i]+'</td><td>'+data[4][i]+'</td><td>'+data[5][i]+'</td><td>'+data[6][i]+'</td></tr>';
 	}
+}
+
+/**  -------------------------------------  */
+
+function Ungrouped(data) {
+	this.data = data,
+	this.tached = [];
+}
+
+Ungrouped.prototype.getArguments = function() {
+	var regEx = /(\d+[\.|\,]?\d+)|(\d)+/g,
+		values = [],
+		match  = true;
+	while (match) {
+		match = regEx.exec(this.data);
+		if(match) values.push(parseFloat(match[0]));
+	}
+	values.sort(function (a,b) {
+		return a - b;
+	});
+    return values;
+    //return array with the text.
+}
+
+Ungrouped.prototype.getCount = function() {
+	var c = 0;
+	for (var i = 0; i < this.getArguments().length; i++) {
+		c += parseFloat(this.getArguments()[i]);
+	}
+	return c;
+}
+
+Ungrouped.prototype.getParameters = function() {
+	var values = this.getArguments(),
+		R = parseFloat((values.max()-values.min()).toFixed(2)),
+		K = Math.ceil( 1 + ( 3.32 * Math.log10(values.length) ) ),
+		A = parseFloat((R/K).toFixed(2)),
+		Li = [],
+		Ls = [],
+		Mi = [],
+		classes = [],
+		f = [];
+
+		for (var i = 0; i < K; i++) {
+			var ai = A;
+
+			if (i == 0) {
+				var min0 = values.min(),
+					max0 = min0 + ai;
+
+				Li.push(min0);
+				Ls.push(max0);
+				Mi.push( ( min0 + max0 ) / 2 );
+				classes.push( min0 + '-' + max0 );
+				f.push(this.getClasses(min0, max0));
+			} else {
+				var min1 = Li[i-1]+A,
+					max1 = min1 + ai;
+
+				Li.push(min1);
+				Ls.push(max1);
+				Mi.push( ( min1 + max1 ) / 2 );
+				classes.push( min1 + '-' + max1 );
+				f.push(this.getClasses(min1, max1));
+			}
+		}
+
+		console.log(values);
+		console.log(R);
+		console.log(K);
+		console.log(A);
+		console.log(Li);
+		console.log(Ls);
+		console.log(Mi);
+		console.log(classes);
+		console.log(f);
+
+}
+
+Ungrouped.prototype.getClasses = function(min, max) {
+	var data = this.getArguments(),
+		count = 0;
+
+	for (var i = 0; i < data.length; i++) {
+		if (data[i] >= min && data[i] <= max) {
+			if (this.tached[i] !== 'undefined') {
+				count += 1;
+				this.tached.push(i);
+			}
+			console.log(this.tached[i]);
+		}
+	}
+
+	return count;
 }
