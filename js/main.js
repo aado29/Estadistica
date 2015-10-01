@@ -1,14 +1,6 @@
 $(function() {
-	Array.prototype.max = function() {
-		return Math.max.apply(null, this);
-	};
-	Array.prototype.min = function() {
-		return Math.min.apply(null, this);
-	};
-	var parametros = $('#parametros').val();
 	$('button').click(function() {
-		$('p').html('');
-		var positions = [],
+		var parametros = $('#parametros').val(),
 			is_group = $('#check').is(':checked'),
 			values = getArguments(parametros);
 
@@ -16,52 +8,26 @@ $(function() {
 		$('#rango').html(values.length);
 
 		if (!is_group) {
-			var dataGroup = tableGroup(values, 'data');
-			var x = dataGroup[0],
-				f = dataGroup[1],
-				fa = dataGroup[2],
-				fr = dataGroup[3],
-				fra = dataGroup[4],
-				multi1 = dataGroup[5],
-				multi2 = dataGroup[6],
-				sumMulti2 = dataGroup[7],
-				sumaT = getCount(values),
-				moda = 0;
 
-			tableGroup(values);
+			var dataGrouped = new Grouped(parametros),
+				dataGroup = dataGrouped.getParameters();
 
-			$('#media').html(sumaT/values.length);
+			dataGrouped.drawTable('#table');
 
-			if (values.length % 2 == 0) {
-				$('#mediana').html(( parseInt(values[(values.length/2)-1]) + parseInt(values[(values.length/2)]) )/2);
-			}else {
-				$('#mediana').html(values[Math.round(values.length/2)-1]);
-			}
-
-			for (var i = 0; i < f.length; i++) {
-				if (f[i] == f.max())
-					moda = x[i];
-			};
-			$('#moda').html(moda);
-
-			$('#varianza').html((sumMulti2/values.length)-Math.pow(sumaT/values.length,2));
-
-			$('#total').html(sumaT);
+			$('#media').html(dataGrouped.getMedia());
+			$('#mediana').html(dataGrouped.getMediana());
+			$('#moda').html(dataGrouped.getModa());
+			$('#varianza').html(dataGrouped.getVariance());
+			$('#total').html(dataGrouped.getCount());
 
 			var chart = c3.generate({
 				data: {
 					xs: {
-						'Frecuencia': 'X',
-						/* 'Frecuencia Absoluta': 'X',
-						'Frecuencia Porcentual': 'X',
-						'Frecuencia Porcentual Absoluta': 'X' */
+						'Frecuencia': 'X'
 					},
 					columns: [
-						adder(x, ["X"]),
-						adder(f, ["Frecuencia"]),
-						/* adder(fa, ["Frecuencia Absoluta"]),
-						adder(fr, ["Frecuencia Porcentual"]),
-						adder(fra, ["Frecuencia Porcentual Absoluta"]) */
+						adder(dataGroup[0], ["X"]),
+						adder(dataGroup[1], ["Frecuencia"])
 					]
 				}
 			});
@@ -79,13 +45,13 @@ $(function() {
 			var fra = [];
 
 			for (var i = 0; i < ni; i++) {
-				var min = parseInt(values.min());
-				var a = i === 0 ? min+(I-1) : (classes[i-1]+1)+(I-1);
-				var fi = i === 0 ? getAccumulated(a-(I-1), I-1, values) : fa[i-1] + getAccumulated(a-(I-1), I-1, values);
+				var min =  Math.floor(parseFloat(values.min()));
+				var a = i == 0 ? min+(I) : (classes[i-1]+0.1)+(I);
+				var fi = i == 0 ? getAccumulated(a-(I), I, values) : fa[i-1] + getAccumulated(a-(I), I, values);
 
 				classes.push(a);
 				ci.push(getci(a-(I-1), a));
-				f.push(getAccumulated(a-(I-1), I-1, values));
+				f.push(getAccumulated(a-(I), I, values));
 				fa.push(fi);
 				fr.push(getfr(f[i], values.length));
 				fra.push(getfr(fa[i], values.length));
@@ -108,8 +74,8 @@ $(function() {
 				var strMinMax = (classes[i]-(I-1))+'-'+classes[i];
 				var tr = $('#table').append('<tr id="'+i+'"><td>'+strMinMax+'</td><td>'+f[i]+'</td><td>'+fa[i]+'</td><td>'+fr[i]+'</td><td>'+fra[i]+'</td><td>'+ci[i]+'</td></tr>');
 			}
-			$('#moda').html(getmodagroup(f.max(), I-1, f, classes));
-			$('#media').html(getmediagroup(f.max(), I-1, f, classes));
+			$('#moda').html(getmodagroup(f.max(), I, f, classes));
+			$('#media').html(getmediagroup(f.max(), I, f, classes));
 			$('#mediana').html(getmediana(f));
 
 			var x = ['x'],

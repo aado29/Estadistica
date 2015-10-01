@@ -1,10 +1,18 @@
+Array.prototype.max = function() {
+	return Math.max.apply(null, this);
+}
+
+Array.prototype.min = function() {
+	return Math.min.apply(null, this);
+}
+
 function getArguments(str) {
 	var regEx = /(\d+[\.|\,]?\d+)|(\d)+/g,
 		values = [],
 		match  = true;
 	while (match) {
 		match = regEx.exec(str);
-		if(match) values.push(parseInt(match[0]));
+		if(match) values.push(match[0]);
 	}
 	values.sort(function (a,b) {
 		return a - b;
@@ -15,13 +23,49 @@ function getArguments(str) {
 function getCount(arr) {
 	var c = 0;
 	for (var i = 0; i < arr.length; i++) {
-		c += arr[i];
+		c += parseFloat(arr[i]);
 	}
 	return c;
 }
 
-function tableGroup(values, type) {
-	var x = [],
+function adder(count, arr) {
+	for (var i = 0; i < count.length; i++) {
+		arr.push(count[i]);
+	}
+	return arr;
+}
+/**  -------------------------------------  */
+
+function Grouped(data) {
+	this.data = data;
+}
+
+Grouped.prototype.getArguments = function() {
+	var regEx = /(\d+[\.|\,]?\d+)|(\d)+/g,
+		values = [],
+		match  = true;
+	while (match) {
+		match = regEx.exec(this.data);
+		if(match) values.push(match[0]);
+	}
+	values.sort(function (a,b) {
+		return a - b;
+	});
+    return values;
+    //return array with the text.
+}
+
+Grouped.prototype.getCount = function() {
+	var c = 0;
+	for (var i = 0; i < this.getArguments().length; i++) {
+		c += parseFloat(this.getArguments()[i]);
+	}
+	return c;
+}
+
+Grouped.prototype.getParameters = function() {
+	var values = this.getArguments(this.data),
+		x = [],
 		f = [],
 		fa = [],
 		fr = [],
@@ -56,36 +100,47 @@ function tableGroup(values, type) {
 		multi2.push(Math.pow(x[i],2)*f[i]);
 		sumMulti2 += multi2[i];
 	}
-	$('#table').html('');
-	$('#table').append('<tr class="info"></tr>');
-	$('#table tr.info')
-		.append('<th>x<sub>i</sub></th>')
-		.append('<th>f<sub>i</sub></th>')
-		.append('<th>f<sub>i</sub>a</th>')
-		.append('<th>fr</th>')
-		.append('<th>fra</th>')
-		.append('<th>x<sub>i</sub>·f<sub>i</sub></th>')
-		.append('<th>x²<sub>i</sub>·f<sub>i</sub></th>');
 
-	for (var i = 0; i < x.length; i++) {
-		$('#table').append('<tr id="'+i+'"></tr>');
-		$('#table tr#'+i)
-			.append('<td>'+x[i]+'</td>')
-			.append('<td>'+f[i]+'</td>')
-			.append('<td>'+fa[i]+'</td>')
-			.append('<td>'+fr[i]+'</td>')
-			.append('<td>'+fra[i]+'</td>')
-			.append('<td>'+multi1[i]+'</td>')
-			.append('<td>'+multi2[i]+'</td>');
-	}
-
-	if (type == 'data')
-		return [x, f, fa, fr, fra, multi1, multi2, sumMulti2];
+	return [x, f, fa, fr, fra, multi1, multi2, sumMulti2];
 }
 
-function adder(count, arr) {
-	for (var i = 0; i < count.length; i++) {
-		arr.push(count[i]);
+Grouped.prototype.getModa = function() {
+	var moda,
+		data = this.getParameters();
+
+	for (var i = 0; i < data[1].length; i++) {
+		if (data[1][i] == data[1].max())
+			moda = data[0][i];
+	};
+
+	return moda;
+}
+
+Grouped.prototype.getMedia = function() {
+	return this.getCount()/this.getArguments().length;
+}
+
+Grouped.prototype.getMediana = function() {
+	var values = this.getArguments();
+
+	if (this.getArguments().length % 2 == 0)
+		return ( parseFloat(values[(values.length/2)-1]) + parseFloat(values[(values.length/2)]) ) / 2;
+	else
+		return (values[Math.round(values.length/2)-1]);
+}
+
+Grouped.prototype.getVariance = function() {
+	var data = this.getParameters(),
+		values = this.getArguments();
+	return (data[7]/values.length)-Math.pow(this.getCount()/values.length,2)
+}
+
+Grouped.prototype.drawTable = function(id) {
+	var data = this.getParameters(),
+		table = document.querySelector(id);
+	table.innerHTML	=	'';
+	table.innerHTML	=	'<tr class="info"><th>x<sub>i</sub></th><th>f<sub>i</sub></th><th>f<sub>i</sub>a</th><th>fr</th><th>fra</th><th>x<sub>i</sub>·f<sub>i</sub></th><th>x²<sub>i</sub>·f<sub>i</sub></th></tr>';
+	for (var i = 0; i < data[0].length; i++) {
+		table.innerHTML	+=	'<tr id="'+i+'"><td>'+data[0][i]+'</td><td>'+data[1][i]+'</td><td>'+data[2][i]+'</td><td>'+data[3][i]+'</td><td>'+data[4][i]+'</td><td>'+data[5][i]+'</td><td>'+data[6][i]+'</td></tr>';
 	}
-	return arr;
 }
