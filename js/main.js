@@ -16,50 +16,19 @@ $(function() {
 		$('#rango').html(values.length);
 
 		if (!is_group) {
-
-			var f = [],
-				fa = [],
-				fr = [],
-				fra = [],
-				multi1 = [],
-				multi2 = [],
-				sumMulti2 = 0,
-				sumaT = 0,
+			var dataGroup = tableGroup(values, 'data');
+			var x = dataGroup[0],
+				f = dataGroup[1],
+				fa = dataGroup[2],
+				fr = dataGroup[3],
+				fra = dataGroup[4],
+				multi1 = dataGroup[5],
+				multi2 = dataGroup[6],
+				sumMulti2 = dataGroup[7],
+				sumaT = getCount(values),
 				moda = 0;
 
-			for (var i = 0; i < values.length; i++) {
-				// values, positions, f, sumaT
-				values[i] = parseInt(values[i])
-				sumaT += parseInt(values[i]);
-				if (i > 0) {
-					if (positions[positions.length-1] != values[i]) {
-						f.push(1);
-						positions.push(values[i]);
-					}else {
-						f[f.length-1] += 1;
-					}
-				}else {
-					f.push(1);
-					positions.push(values[i]);
-				}
-			}
-
-			for (var i = 0; i < f.length; i++) {
-				// f, fa, fr, fra, multi1, multi2, sumMulti
-				if (i > 0) {
-					fa.push(fa[i-1] + f[i]);
-				}else {
-					fa.push(f[0]);
-				}
-				fr.push(f[i]/values.length);
-				fra.push(fa[i]/values.length);
-				multi1.push(positions[i]*f[i]);
-				multi2.push(Math.pow(positions[i],2)*f[i]);
-				sumMulti2 += multi2[i];
-			}
-
 			tableGroup(values);
-			console.log(tableGroup(values));
 
 			$('#media').html(sumaT/values.length);
 
@@ -71,7 +40,7 @@ $(function() {
 
 			for (var i = 0; i < f.length; i++) {
 				if (f[i] == f.max())
-					moda = positions[i];
+					moda = x[i];
 			};
 			$('#moda').html(moda);
 
@@ -79,20 +48,20 @@ $(function() {
 
 			$('#total').html(sumaT);
 
-			var x = ['x'],
-				x1 = ['x1'];
-
-			adder(positions, x);
-			adder(f, x1);
-
 			var chart = c3.generate({
 				data: {
 					xs: {
-						'x1': 'x',
+						'Frecuencia': 'X',
+						/* 'Frecuencia Absoluta': 'X',
+						'Frecuencia Porcentual': 'X',
+						'Frecuencia Porcentual Absoluta': 'X' */
 					},
 					columns: [
-						x1,
-						x
+						adder(x, ["X"]),
+						adder(f, ["Frecuencia"]),
+						/* adder(fa, ["Frecuencia Absoluta"]),
+						adder(fr, ["Frecuencia Porcentual"]),
+						adder(fra, ["Frecuencia Porcentual Absoluta"]) */
 					]
 				}
 			});
@@ -163,11 +132,6 @@ $(function() {
 			});
 		}
 	});
-	function adder(count, arr) {
-		for (var i = 0; i < count.length; i++) {
-			arr.push(count[i]);
-		}
-	}
 	function getAccumulated(min, count, data) {
 		var a = 0;
 		for (var i = 0; i < data.length; i++) {

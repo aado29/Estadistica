@@ -4,7 +4,7 @@ function getArguments(str) {
 		match  = true;
 	while (match) {
 		match = regEx.exec(str);
-		if(match) values.push(match[0]);
+		if(match) values.push(parseInt(match[0]));
 	}
 	values.sort(function (a,b) {
 		return a - b;
@@ -20,7 +20,7 @@ function getCount(arr) {
 	return c;
 }
 
-function tableGroup(values) {
+function tableGroup(values, type) {
 	var x = [],
 		f = [],
 		fa = [],
@@ -79,5 +79,13 @@ function tableGroup(values) {
 			.append('<td>'+multi2[i]+'</td>');
 	}
 
-	return [x, f, fa, fr, fra, multi1, multi2, sumMulti2];
+	if (type == 'data')
+		return [x, f, fa, fr, fra, multi1, multi2, sumMulti2];
+}
+
+function adder(count, arr) {
+	for (var i = 0; i < count.length; i++) {
+		arr.push(count[i]);
+	}
+	return arr;
 }
