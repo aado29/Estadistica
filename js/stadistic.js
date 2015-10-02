@@ -134,9 +134,13 @@ Grouped.prototype.drawTable = function(id) {
 
 /**  -------------------------------------  */
 
-function Ungrouped(data) {
-	this.data = data,
-	this.tached = [];
+function Ungrouped(data, isDecimal) {
+	this.data = data;
+	this.is_decimal = false;
+}
+
+Ungrouped.prototype.setDecimal = function () {
+	this.is_decimal = true;
 }
 
 Ungrouped.prototype.getArguments = function() {
@@ -164,64 +168,95 @@ Ungrouped.prototype.getCount = function() {
 
 Ungrouped.prototype.getParameters = function() {
 	var values = this.getArguments(),
-		R = parseFloat((values.max()-values.min()).toFixed(2)),
-		K = Math.ceil( 1 + ( 3.32 * Math.log10(values.length) ) ),
-		A = parseFloat((R/K).toFixed(2)),
-		Li = [],
-		Ls = [],
-		Mi = [],
-		classes = [],
-		f = [];
+		R = parseFloat((values.max()-values.min()).toFixed(2)), //Rango
+		K = Math.ceil( 1 + ( 3.32 * Math.log10(values.length) ) ), //
+		A = parseFloat((R/K).toFixed(2)), //Amplitud
+		Li = [], //Limite inferior
+		Ls = [], //limite superior
+		Mi = [], //media de intervalo
+		classes = [], //classes -> String
+		f = [], //frecuencias
+		fa = [];
 
-		for (var i = 0; i < K; i++) {
-			var ai = A;
+	for (var i = 0; i < K; i++) {
+		var ai = A;
 
-			if (i == 0) {
-				var min0 = values.min(),
-					max0 = min0 + ai;
+		if (i == 0) {
+			var min0 = parseFloat(values.min().toFixed(2)),
+				max0 = parseFloat((min0 + ai).toFixed(2));
 
-				Li.push(min0);
-				Ls.push(max0);
-				Mi.push( ( min0 + max0 ) / 2 );
-				classes.push( min0 + '-' + max0 );
-				f.push(this.getClasses(min0, max0));
-			} else {
-				var min1 = Li[i-1]+A,
-					max1 = min1 + ai;
+			Li.push(min0);
+			Ls.push(max0);
+			Mi.push( ( min0 + max0 ) / 2 );
+			classes.push( '[' + min0 + '] - [' + max0 + ']' );
+			f.push(this.getClassesCount(min0, max0));
+			fa.push(this.getClassesCount(min0, max0));
+		} else {
+			var k = (this.is_decimal) ? 0.01: 1;
+				min1 = parseFloat((Li[i-1]+A).toFixed(2)) + k,
+				max1 = parseFloat((min1 + ai).toFixed(2));
 
-				Li.push(min1);
-				Ls.push(max1);
-				Mi.push( ( min1 + max1 ) / 2 );
-				classes.push( min1 + '-' + max1 );
-				f.push(this.getClasses(min1, max1));
-			}
-		}
-
-		console.log(values);
-		console.log(R);
-		console.log(K);
-		console.log(A);
-		console.log(Li);
-		console.log(Ls);
-		console.log(Mi);
-		console.log(classes);
-		console.log(f);
-
-}
-
-Ungrouped.prototype.getClasses = function(min, max) {
-	var data = this.getArguments(),
-		count = 0;
-
-	for (var i = 0; i < data.length; i++) {
-		if (data[i] >= min && data[i] <= max) {
-			if (this.tached[i] !== 'undefined') {
-				count += 1;
-				this.tached.push(i);
-			}
-			console.log(this.tached[i]);
+			Li.push(min1);
+			Ls.push(max1);
+			Mi.push( ( min1 + max1 ) / 2 );
+			classes.push( '[' + min1 + '] - [' + max1 + ']' );
+			f.push(this.getClassesCount(min1, max1));
+			fa.push(fa[i-1] + this.getClassesCount(min1, max1));
 		}
 	}
 
+	console.log('k: '+this.is_decimal);
+
+	return [R, K, A, Li, Ls, Mi, classes, f, fa];
+}
+
+Ungrouped.prototype.getClassesCount = function(min, max) {
+	var data = this.getArguments(),
+		count = 0;
+
+	for (var i = 0; i < data.length; i++)
+		if (data[i] >= min && data[i] <= max)
+				count += 1;
+
 	return count;
+}
+
+Ungrouped.prototype.drawTable = function(id) {
+	var data = this.getParameters(),
+		table = document.querySelector(id);
+	table.innerHTML	=	'';
+	table.innerHTML	=	'<tr class="info"><th>Clases</th><th>x</th><th>f</th><th>fa</th><th>x.f</th></tr>';
+	for (var i = 0; i < data[1]; i++) {
+		var classes = data[3][i]+'-'+data[4][i];
+		table.innerHTML	+=	'<tr id="'+i+'"><td>'+classes+'</td><td>'+data[5][i]+'</td><td>'+data[7][i]+'</td><td>'+data[8][i]+'</td><td>'+this.getXxIData()[i]+'</td></tr>';
+	}
+}
+
+Ungrouped.prototype.getMedia = function() {
+	var XxI = this.getXxI(),
+		n = this.getArguments().length;
+
+	return XxI/n;
+}
+
+Ungrouped.prototype.getXxI = function() {
+	var data = this.getXxIData(),
+		XxI = 0;
+
+	for (var i = 0; i < data.length; i++) {
+		XxI += data[i];
+	}
+	return XxI;
+}
+
+Ungrouped.prototype.getXxIData = function() {
+	var Mi = this.getParameters()[5],
+		f = this.getParameters()[7],
+		XxI = [];
+
+	for (var i = 0; i < Mi.length; i++) {
+		XxI.push(f[i] * Mi[i]);
+	}
+
+	return XxI;
 }

@@ -2,6 +2,7 @@ $(function() {
 	$('button').click(function() {
 		var parametros = $('#parametros').val(),
 			is_group = $('#check').is(':checked'),
+			is_decimal = $('#decimal').is(':checked'),
 			values = new Grouped(parametros),
 			values = values.getArguments();
 
@@ -35,6 +36,25 @@ $(function() {
 		}else {
 			var dataUngrouped = new Ungrouped(parametros),
 				dataUngroup = dataUngrouped.getParameters();
+
+			if (is_decimal)
+				dataUngrouped.setDecimal();
+
+			dataUngrouped.drawTable('#table');
+
+			$('#media').html(dataUngrouped.getMedia());
+
+			var chart = c3.generate({
+				data: {
+					xs: {
+						'Frecuencia': 'X'
+					},
+					columns: [
+						adder(dataUngroup[5], ["X"]),
+						adder(dataUngroup[7], ["Frecuencia"])
+					]
+				}
+			});
 		}
 	});
 
