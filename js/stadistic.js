@@ -168,15 +168,20 @@ Ungrouped.prototype.getCount = function() {
 
 Ungrouped.prototype.getParameters = function() {
 	var values = this.getArguments(),
-		R = parseFloat((values.max()-values.min()).toFixed(2)), //Rango
-		K = Math.ceil( 1 + ( 3.32 * Math.log10(values.length) ) ), //
-		A = parseFloat((R/K).toFixed(2)), //Amplitud
+		R = Math.ceil(values.max()-values.min()), //Rango
+		K = Math.floor( 1 + ( 3.32 * Math.log10(values.length) ) ), //
+		A = Math.round(R/K), //Amplitud
 		Li = [], //Limite inferior
 		Ls = [], //limite superior
 		Mi = [], //media de intervalo
 		classes = [], //classes -> String
 		f = [], //frecuencias
 		fa = [];
+
+	if (this.is_decimal) {
+		R = parseFloat((values.max()-values.min()).toFixed(2)); //Rango
+		A = parseFloat((R/K).toFixed(2)); //Amplitud
+	}
 
 	for (var i = 0; i < K; i++) {
 		var ai = A;
@@ -204,8 +209,6 @@ Ungrouped.prototype.getParameters = function() {
 			fa.push(fa[i-1] + this.getClassesCount(min1, max1));
 		}
 	}
-
-	console.log('k: '+this.is_decimal);
 
 	return [R, K, A, Li, Ls, Mi, classes, f, fa];
 }
@@ -259,4 +262,25 @@ Ungrouped.prototype.getXxIData = function() {
 	}
 
 	return XxI;
+}
+
+Ungrouped.prototype.getModa = function() {
+	var moda,
+		data = this.getParameters();
+
+	for (var i = 0; i < data[7].length; i++) {
+		if (data[7][i] == data[7].max())
+			moda = data[5][i];
+	};
+
+	return moda;
+}
+
+Ungrouped.prototype.getMediana = function() {
+	var values = this.getArguments();
+
+	if (this.getArguments().length % 2 == 0)
+		return ( parseFloat(values[(values.length/2)-1]) + parseFloat(values[(values.length/2)]) ) / 2;
+	else
+		return (values[Math.round(values.length/2)-1]);
 }

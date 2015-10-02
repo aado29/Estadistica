@@ -43,6 +43,8 @@ $(function() {
 			dataUngrouped.drawTable('#table');
 
 			$('#media').html(dataUngrouped.getMedia());
+			$('#mediana').html(dataUngrouped.getMediana());
+			$('#moda').html(dataUngrouped.getModa());
 
 			var chart = c3.generate({
 				data: {
